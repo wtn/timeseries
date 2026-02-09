@@ -62,6 +62,12 @@ describe Timeseries::Series do
 		describe "#daily!" do
 		end
 
+		describe "#sort_by_date_ascending" do
+			it "responds to dynamic sort methods" do
+				expect(@series).to respond_to(:sort_by_date_ascending)
+			end
+		end
+
 		describe "#zero_empty_dates" do
 			it "fills in empty days as 0" do
 				@series.delete_at( 1 )

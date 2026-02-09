@@ -1,7 +1,8 @@
 require 'date'
 require 'active_support'
 require 'active_support/core_ext/date_time'
-require 'timeseries/data_point'
+require_relative 'data_point'
+
 module Timeseries
 	# Series - a time-ordered array of values
 	# 	equations from here: http://stockcharts.com/school/doku.php?id=chart_school:technical_indicators:moving_averages
@@ -11,13 +12,12 @@ module Timeseries
 			each { |item| raise ArgumentError , 'Invalid item added to Series, must be Timeseries::DataPoint' unless item.class == Timeseries::DataPoint }
 		end
 
-		# Returns
 		def sum_range offset = 0 , time_period = 7
-			self[offset,time_period].inject(0) { |total,dp| total.to_f + dp.value.to_f }
+			self[offset,time_period].inject(0) { |total,dp| total + dp.value.to_f }
 		end
 
 		def sum
-			inject(0) { |total,dp| total.to_f + dp.value.to_f }
+			inject(0) { |total,dp| total + dp.value.to_f }
 		end
 
 		# Generates time series where the DataPoint object values are moving averages
@@ -42,7 +42,7 @@ module Timeseries
 
 		# Generates time series where the DataPoint object values are exponential moving averages
 		#
-		# @return [TimeSeries::Series] exponential moving average series
+		# @return [Timeseries::Series] exponential moving average series
 		def exponential_moving_average time_period = 7
 			averages = self.each_with_index.map do |dp,i|
 				Timeseries::DataPoint.new( dp.date , ema( time_period , i ) )
@@ -51,6 +51,12 @@ module Timeseries
 		end
 
 		# Sorting methods
+		def respond_to_missing?(name , include_private = false)
+			name =~ /^sort_by_(\w+)_(asc|desc)/ ||
+				name =~ /^([^_]+)_day_((?:exponential_)?moving_average)$/ ||
+				super
+		end
+
 		def method_missing(name , *args)
 			# sort DataPoints ascending or descending based on attribute (date or value)
 			if /^sort_by_(\w+)_([^!]+)(!?)$/.match(name)
@@ -73,7 +79,7 @@ module Timeseries
 		# @return [Timeseries::Series] a daily version of the current series
 		def daily
 			grouped = group_by { |dp| dp.date.jd }
-			daily_series = grouped.map { |k,v| Timeseries::DataPoint.new( v[0].date , v.inject(0) { |sum,c| sum.to_f + c.value.to_f } )  }
+			daily_series = grouped.map { |k,v| Timeseries::DataPoint.new( v[0].date , v.inject(0) { |sum,c| sum + c.value.to_f } ) }
 			Timeseries::Series.new( daily_series )
 		end
 
@@ -97,7 +103,7 @@ module Timeseries
 
 			( incomplete_series.last.date.jd .. incomplete_series.first.date.jd ).map do |jd_date|
 				match = incomplete_series.find { |dp| dp.date.jd == jd_date }
-				value = ( match == nil ) ? 0 : match.value
+				value = match.nil? ? 0 : match.value
 				date = DateTime.jd( jd_date ).midnight
 				daily_series.unshift( Timeseries::DataPoint.new( date , value ) )
 			end
