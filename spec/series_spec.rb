@@ -25,28 +25,28 @@ describe Timeseries::Series do
 		describe "#sum_range" do
 			it "sums the range requested" do
 				# sums @datapoints[0,7]
-				@series.sum_range( 0 , 7 ).should eq 28
+				expect(@series.sum_range( 0 , 7 )).to eq 28
 			end
 		end
 
 		describe "#sum" do
 			it "returns the sum of all the datapoints" do
-				@series.sum.should eq 66
+				expect(@series.sum).to eq 66
 			end
 		end
 
 		describe "#moving_average" do
 			it "zeros any empty days" do
-				Timeseries::Series.any_instance.should_receive(:zero_empty_dates).and_return(Timeseries::Series.new)
+				expect_any_instance_of(Timeseries::Series).to receive(:zero_empty_dates).and_return(Timeseries::Series.new)
 				@series.moving_average(7)
 			end
 
 			it "returns a Timeseries::Series" do
-				@series.moving_average(2).should be_an_instance_of( Timeseries::Series )
+				expect(@series.moving_average(2)).to be_an_instance_of( Timeseries::Series )
 			end
 
 			it "returns moving average for the given number of days" do
-				@series.moving_average(2)[0].value.should eq 1.5
+				expect(@series.moving_average(2)[0].value).to eq 1.5
 			end
 		end
 
@@ -65,7 +65,7 @@ describe Timeseries::Series do
 		describe "#zero_empty_dates" do
 			it "fills in empty days as 0" do
 				@series.delete_at( 1 )
-				@series.zero_empty_dates[1].value.should eq 0
+				expect(@series.zero_empty_dates[1].value).to eq 0
 			end
 		end
 	end

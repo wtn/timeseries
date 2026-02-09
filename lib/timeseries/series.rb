@@ -1,4 +1,6 @@
-require 'active_support/core_ext'
+require 'date'
+require 'active_support'
+require 'active_support/core_ext/date_time'
 require 'timeseries/data_point'
 module Timeseries
 	# Series - a time-ordered array of values
@@ -9,12 +11,12 @@ module Timeseries
 			each { |item| raise ArgumentError , 'Invalid item added to Series, must be Timeseries::DataPoint' unless item.class == Timeseries::DataPoint }
 		end
 
-		# Returns 
-		def sum_range offset = 0 , time_period = 7 
+		# Returns
+		def sum_range offset = 0 , time_period = 7
 			self[offset,time_period].inject(0) { |total,dp| total.to_f + dp.value.to_f }
 		end
 
-		def sum 
+		def sum
 			inject(0) { |total,dp| total.to_f + dp.value.to_f }
 		end
 
@@ -23,7 +25,7 @@ module Timeseries
 		# @return [Timeseries::Series] moving average series
 		def moving_average time_period = 7
 			moving_averages = zero_empty_dates.each_with_index.map do |c,i|
-				dp = DataPoint.new 
+				dp = DataPoint.new
 				dp.value = single_day_moving_average( i , time_period )
 				dp.date = c.date
 				dp
@@ -94,7 +96,7 @@ module Timeseries
 			return daily_series if incomplete_series.length < 2
 
 			( incomplete_series.last.date.jd .. incomplete_series.first.date.jd ).map do |jd_date|
-				match = incomplete_series.find { |dp| dp.date.jd == jd_date } 
+				match = incomplete_series.find { |dp| dp.date.jd == jd_date }
 				value = ( match == nil ) ? 0 : match.value
 				date = DateTime.jd( jd_date ).midnight
 				daily_series.unshift( Timeseries::DataPoint.new( date , value ) )
@@ -105,9 +107,9 @@ module Timeseries
 
 	private
 		def ema time_period = 7 , offset = 0
-			# equation:  
+			# equation:
 			#  Multiplier: (2 / (Time periods + 1) ) = (2 / (10 + 1) ) = 0.1818 (18.18%)
-			#  EMA: {value - EMA(previous day)} x multiplier + EMA(previous day). 
+			#  EMA: {value - EMA(previous day)} x multiplier + EMA(previous day).
 			return nil if offset > ( self.length - time_period )
 
 			# Exponential moving average always uses simple moving average as first value

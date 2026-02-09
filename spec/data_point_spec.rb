@@ -5,6 +5,6 @@ describe Timeseries::DataPoint do
 
 	subject { @point }
 
-	it { should respond_to(:date) }
-	it { should respond_to(:value) }
+	it { is_expected.to respond_to(:date) }
+	it { is_expected.to respond_to(:value) }
 end
